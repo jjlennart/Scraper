@@ -81,28 +81,43 @@ namespace Scraper
                 for (int j = 0; j < numberOfCategories; j++)
                 {
                     var clueNumber = numberOfCluesPerCategory * k + k  + j;
-                    var clueValue = htmlBody.SelectNodes("//div[@id='jeopardy_round']//td[contains(@class, 'clue')]//td[contains(@class, 'clue_value')]")[clueNumber].InnerHtml;
+                    //var clueContainer = htmlBody.SelectNodes("//div[@id='jeopardy_round']//td[contains(@class, 'clue')]")[clueNumber];
+                    var clueContainer = htmlBody.SelectNodes("//div[@id='jeopardy_round']//td[@class = 'clue']")[clueNumber];
+                    var clueValue = clueContainer.SelectSingleNode(".//td[contains(@class, 'clue_value')]")?.InnerHtml;
+                    //var testClueValue2 = testclueContainer.SelectSingleNode("./td[contains(@class, 'clue_value')]")?.InnerHtml;
+                    var clueText = clueContainer.SelectSingleNode(".//td[contains(@class, 'clue_text')]")?.InnerHtml;
+                    //var clueValue = htmlBody.SelectNodes("//div[@id='jeopardy_round']//td[contains(@class, 'clue')]//td[contains(@class, 'clue_text')]")[clueNumber].InnerHtml;
+                    var response = GetResponseFromString(clueContainer.SelectSingleNode(".//div")?.OuterHtml);
 
-                    //TODO: If clue not shown, record some how
                     clues.Add(new Clue
                     {
                         Category = categories[j],
-                        Value = (k+1) * 200,
-                        IsDailyDouble = clueValue.Contains("DD"),
-                        ClueText = htmlBody.SelectNodes("//div[@id='jeopardy_round']//td[contains(@class, 'clue')]//td[contains(@class, 'clue_text')]")[clueNumber].InnerHtml,
-                        Response = GetResponseFromString(htmlBody.SelectNodes("//div[@id='jeopardy_round']//td[contains(@class, 'clue')]//div")[clueNumber].OuterHtml),
-                });
+                        Value = (k + 1) * 200,
+                        IsDailyDouble = clueValue!=null &&  clueValue.Contains("DD"),
+                        ClueText = clueText,//htmlBody.SelectNodes("//div[@id='jeopardy_round']//td[contains(@class, 'clue')]//td[contains(@class, 'clue_text')]")[clueNumber].InnerHtml,
+                        Response = response,// GetResponseFromString(htmlBody.SelectNodes("//div[@id='jeopardy_round']//td[contains(@class, 'clue')]//div")[clueNumber].OuterHtml),
+                    });
+                    //TODO: If clue not shown, record some how
+                    //    clues.Add(new Clue
+                    //    {
+                    //        Category = categories[j],
+                    //        Value = (k+1) * 200,
+                    //        IsDailyDouble = clueValue.Contains("DD"),
+                    //        ClueText = htmlBody.SelectNodes("//div[@id='jeopardy_round']//td[contains(@class, 'clue')]//td[contains(@class, 'clue_text')]")[clueNumber].InnerHtml,
+                    //        Response = GetResponseFromString(htmlBody.SelectNodes("//div[@id='jeopardy_round']//td[contains(@class, 'clue')]//div")[clueNumber].OuterHtml),
+                    //});
 
-                   
                 }
-
-
-
             }
+            var a = clues;
            
         }
         public string GetResponseFromString(string html)
         {
+            if(html is null)
+            {
+                return null;
+            }
             var startString = "correct_response&quot;&gt;";
             var endString = "&lt;/em&gt;&lt;br";
             int pFrom = html.IndexOf(startString) + startString.Length;
